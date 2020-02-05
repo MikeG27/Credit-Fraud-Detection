@@ -3,6 +3,10 @@
 
 Credit Card Fraud Detection involves modelling the card transactions using the the transaction history based on the ones that turned out to be fraud. It is important that credit card companies are able to recognize fraudulent credit card transactions so that customers are not charged for items that they did not purchase.
 
+<p align="center">
+  <img width="460" height="300" src=https://user-images.githubusercontent.com/21131348/73851475-d3102400-482d-11ea-99b6-194dbc9c148e.png>
+</p>
+
 <!-- GETTING STARTED -->
 ## Getting Started
 
