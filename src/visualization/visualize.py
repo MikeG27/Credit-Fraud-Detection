@@ -1,9 +1,12 @@
-import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from src.utils.utils import ecdf
+
+sns.set_style('whitegrid')
+from src.utils.utils import ecdf,print_best_corelations
+from src.utils.utils import memory_usage,optimize_floats,optimize_ints
+import config
 
 
 def plot_pca_components(df):
@@ -20,11 +23,10 @@ def plot_pca_components(df):
     ax.set_xlabel("Component Index")
     ax.set_ylabel("Variance (σ²)")
 
-    plt.savefig("../reports/figures/1.PCA_components.png")
-    plt.show()
+    plt.savefig(config.FIGURES_PCA_COMPONENTS)
 
 
-def plot_frauds_counter(df,):
+def plot_frauds_counter(df, ):
     plt.figure(figsize=(15, 5))
     ax = sns.countplot(x="Class", data=df)
     ax.set_title("Fraud counter")
@@ -37,14 +39,13 @@ def plot_frauds_counter(df,):
                 '{:1.1f}'.format(height),
                 ha="center", fontsize=15)
 
-    plt.savefig("../reports/figures/2.Frauds_counter.png")
-    plt.show()
+    plt.savefig(config.FIGURES_FRAUDS_COUNTER)
 
 
 def plot_feature_distribution(df, features, label1='0', label2="1"):
     df1 = df.loc[df['Class'] == 0]
     df2 = df.loc[df['Class'] == 1]
-    sns.set_style('whitegrid')
+
     plt.figure()
     fig, ax = plt.subplots(6, 5, figsize=(18, 22))
 
@@ -59,8 +60,7 @@ def plot_feature_distribution(df, features, label1='0', label2="1"):
 
     plt.suptitle("Feature distribution", fontsize=12)
 
-    plt.savefig("../reports/figures/3.feature distribution.png")
-    plt.show()
+    plt.savefig(config.FIGURES_DISTRIBUTION)
 
 def plot_traingled_corr_mat(df):
     # Compute the correlation matrix
@@ -78,88 +78,130 @@ def plot_traingled_corr_mat(df):
 
     # Draw the heatmap with the mask and correct aspect ratio
     sns.heatmap(corr, mask=mask, cmap=cmap, vmax=.3, center=0,
-                square=True, linewidths=.5, cbar_kws={"shrink": .5}, annot=True,fmt=".1%")
+                square=True, linewidths=.5, cbar_kws={"shrink": .5}, annot=True, fmt=".1%")
 
-    plt.savefig("../reports/figures/4.Corelation_matrix.png")
-    plt.show()
+    plt.savefig(config.FIGURES_CORRELATIONS)
+
 
 def plot_transactions_scatter(df):
-    fig, ax = plt.subplots(1, 2, figsize=(15,5), sharex=True)
+    fig, ax = plt.subplots(1, 2, figsize=(15, 5), sharex=True)
     fig.suptitle('Time of transaction vs Amount', fontsize=16)
     colors = ["#0101DF", "#DF0101"]
 
-    ax[0].scatter(df[df['Class']==1].Time, df[df['Class']==1].Amount)
+    ax[0].scatter(df[df['Class'] == 1].Time, df[df['Class'] == 1].Amount)
     ax[0].set_title('Fraud')
     ax[0].set_xlabel('Time')
     ax[0].set_ylabel('Amount')
 
-    ax[1].scatter(df[df['Class']==0].Time, df[df['Class']==0].Amount)
+    ax[1].scatter(df[df['Class'] == 0].Time, df[df['Class'] == 0].Amount)
     ax[1].set_title('Normal')
     ax[1].set_xlabel('Time')
     ax[1].set_ylabel('Amount')
 
-    plt.savefig("../reports/figures/5.Transactions_scatter.png")
-    plt.show()
+    plt.savefig(config.FIGURES_TRANSACTIONS_SCATTER)
+
 
 def plot_transactions_historagram(df):
     fraud = df[df["Class"] == 1]
     normal = df[df["Class"] == 0]
 
-    f, (ax1, ax2) = plt.subplots(1, 2,figsize=(15,5))
-    f.suptitle('Number of transactions by amount',size = 16)
+    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
+    f.suptitle('Number of transactions by amount', size=16)
 
-    ax1.hist(fraud.Amount, bins = 100)
+    ax1.hist(fraud.Amount, bins=100)
     ax1.set_title(f'Fraud (min : {fraud.Amount.min()} | max : {fraud.Amount.max()} )')
     ax1.set_xlabel('Amount ($)')
     ax1.set_ylabel('Number of Transactions')
     ax1.set_yscale("log")
 
-    ax2.hist(normal.Amount, bins = 100)
+    ax2.hist(normal.Amount, bins=100)
     ax2.set_title(f'Normal (min : {normal.Amount.min()} | max : {normal.Amount.max()} )')
     ax2.set_xlabel('Amount ($)')
     ax2.set_ylabel('Number of Transactions')
     ax2.set_yscale("log")
 
-    plt.savefig("../reports/figures/6.Transactions_histogram.png")
-    plt.show()
+    plt.savefig(config.FIGURES_TRANSACTIONS_HISTOGRAM)
 
 
 def plot_transactions_density(df):
     normal = df.loc[df['Class'] == 0]["Time"]
     fraud = df.loc[df['Class'] == 1]["Time"]
-    plt.figure(figsize = (14,4))
+    plt.figure(figsize=(14, 4))
     plt.title('Credit Card Transactions Time Density Plot')
-    sns.distplot(fraud,kde=True,bins=10,label = "Fraud")
-    sns.distplot(normal,kde=True,bins=10,label="Normal")
+    sns.distplot(fraud, kde=True, bins=10, label="Fraud")
+    sns.distplot(normal, kde=True, bins=10, label="Normal")
 
     plt.xlabel("time(sample)")
     plt.ylabel("Density")
     plt.legend()
 
-    plt.savefig("../reports/figures/7.Transactions_density.png")
-    plt.show()
+    plt.savefig(config.FIGURES_TRANSACTIONS_PDF)
+
 
 # Plot EDF normal
-
 
 def plot_ecdf(df):
     normal = df[df["Class"] == 0]
     fraud = df[df["Class"] == 1]
 
-    fig, ax = plt.subplots(1,2,figsize=(15,5))
+    fig, ax = plt.subplots(1, 2, figsize=(15, 5))
 
-    x_amount_fraud , y_amount_fraud = ecdf(fraud["Amount"].values)
-    ax[0].plot(x_amount_fraud ,y_amount_fraud,marker= ".",linestyle = 'none')
+    x_amount_fraud, y_amount_fraud = ecdf(fraud["Amount"].values)
+    ax[0].plot(x_amount_fraud, y_amount_fraud, marker=".", linestyle='none')
     ax[0].set_xlabel("Amount $")
     ax[0].set_ylabel("Cumulative probability")
     ax[0].set_title("Fraud")
 
-    x_amount_norm , y_amount_norm = ecdf(normal["Amount"].values)
-    ax[1].plot(x_amount_norm ,y_amount_norm,marker= ".",linestyle = 'none')
-    ax[1].set_xlim(0,2200)
+    x_amount_norm, y_amount_norm = ecdf(normal["Amount"].values)
+    ax[1].plot(x_amount_norm, y_amount_norm, marker=".", linestyle='none')
+    ax[1].set_xlim(0, 2200)
     ax[1].set_xlabel("Amount $")
     ax[1].set_ylabel("Cumulative probability")
     ax[1].set_title("Normal")
 
     plt.suptitle("Cumulative probability")
-    plt.show()
+
+    plt.savefig(config.FIGURES_TRANSACTIONS_ECDF)
+
+if __name__ =="__main__":
+
+    print("[RUN ANALYTICS...]")
+
+    # Read data
+    df = pd.read_csv(config.RAW_DATA)
+
+    # Optimize memory
+    memory_usage(df)
+    df = optimize_floats(df)
+    df = optimize_ints(df)
+    memory_usage(df)
+
+    # plot class histogram
+    plot_frauds_counter(df)
+
+    # pca analysis
+    df_29 = df[df.columns[1:29]]
+    df_pca = plot_pca_components(df_29)
+
+    # Features distributions by class
+    features = df.columns.values[:-1]
+    plot_feature_distribution(df, features, '0', '1')
+
+    # Data correlations
+    print_best_corelations(df)
+    plot_traingled_corr_mat(df)
+
+    # Transactions scatter
+    plot_transactions_scatter(df)
+
+    # Transactions density
+    plot_transactions_density(df)
+
+    # Transactions histogram
+    plot_transactions_historagram(df)
+
+    # ECDF
+    plot_ecdf(df)
+
+    print("\nData analysis was ended ")
+

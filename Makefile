@@ -56,6 +56,10 @@ endif
 test_environment:
 	$(PYTHON_INTERPRETER) test_environment.py
 
+## generate_reports based on analytics pipeline
+generate_reports:
+	jupyter nbconvert --to pdf --template notebooks/hidecode notebooks/Fraud_Data_Analysis.ipynb
+
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################
